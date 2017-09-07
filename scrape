@@ -9,7 +9,13 @@
 pushd $(pwd -P)/data
 
 CURL="curl -#"
-JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
+case $PLATFORM in
+  "Darwin" )
+    JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
+    ;;
+  "Linux" )
+    JQ="/home/rmm1002/openbanking-scripts/jq/jq-1.5/jq"
+esac
 
 CATALOG=participant_store.json
 ENDPOINTS=name-endpoints.json
