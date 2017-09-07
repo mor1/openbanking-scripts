@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright (c) 2017, Richard Mortier <mort@cantab.net>
 # @license LICENSE.txt
