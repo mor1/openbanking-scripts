@@ -5,6 +5,12 @@
 #
 # Scrape all Open Banking open API endpoints
 
+if [ "$#" -ne 1 ]; then
+  echo "usage: $(basename "$0") COMMIT-MSG"
+  exit 1
+fi
+COMMITMSG=$1
+
 CURL="curl -#k" # Bank of Ireland TLS certificate is broken...
 PLATFORM=$(uname -s)
 
@@ -53,7 +59,7 @@ done
 
 # commit any modifications to the datastore
 git add .
-git commit -am "$(date -u +%FT%TZ)"
+git commit -am "$COMMITMSG"
 
 # done
 popd
