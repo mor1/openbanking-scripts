@@ -20,7 +20,7 @@ case $PLATFORM in
     JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
     ;;
   Linux )
-    JQ="/home/rmm1002/openbanking-scripts/jq/jq-1.5/jq"
+    JQ="/home/rmm1002/openbanking-scripts/jq-linux64"
     ;;
   * )
     echo "ERR: unknown PLATFORM=$PLATFORM"
