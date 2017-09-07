@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Copyright (c) 2017, Richard Mortier <mort@cantab.net>
+# @license LICENSE.txt
+#
+# Scrape all Open Banking open API endpoints
+
+# canonicalise directory
+pushd $(pwd -P)/data
+
+CURL="curl -#"
+JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
+
+CATALOG=participant_store.json
+ENDPOINTS=name-endpoints.json
+
+# fetch the endpoint catalogue
+ROOT=https://developer.openbanking.org.uk/open-data/participant-store/$CATALOG
+$CURL -O $ROOT
+
+# process catalogue to extract all (name,endpoint) pairs
+$JQ '.data[] as $d '`
+    `'| { mtime: .meta.LastUpdated,'`
+        `'name: $d.name,'`
+        `'urls: ['`
+        `'  $d.baseUrl'`
+        `'  + "/" + ($d.supportedAPIs | to_entries | .[] | .value[]'`
+        `'  + "/" + .key)'`
+        `']}' \
+          $CATALOG >| $ENDPOINTS
+
+# iterate over (name,endpoint) pairs to fetch data
+$JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
+  | tr -d '"' \
+  | while read name url;
+do
+  echo "== fetch $name: $url"
+  $CURL $url | $JQ '.' >| "$name-$(basename $url).json"
+done
+
+# commit any modifications to the datastore
+git add .
+git commit -am "$(date -u +%FT%TZ)"
+
+# done
+popd
