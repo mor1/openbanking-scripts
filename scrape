@@ -5,24 +5,31 @@
 #
 # Scrape all Open Banking open API endpoints
 
-# canonicalise directory
-pushd $(pwd -P)/data
-
 CURL="curl -#"
-case $PLATFORM in
-  "Darwin" )
-    JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
-    ;;
-  "Linux" )
-    JQ="/home/rmm1002/openbanking-scripts/jq/jq-1.5/jq"
-esac
+PLATFORM=$(uname -s)
 
+BASEURL=https://developer.openbanking.org.uk/open-data/participant-store
 CATALOG=participant_store.json
 ENDPOINTS=name-endpoints.json
 
+# canonicalise directory
+pushd $(pwd -P)/data
+
+case $PLATFORM in
+  Darwin )
+    JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
+    ;;
+  Linux )
+    JQ="/home/rmm1002/openbanking-scripts/jq/jq-1.5/jq"
+    ;;
+  * )
+    echo "ERR: unknown PLATFORM=$PLATFORM"
+    exit 1
+    ;;
+esac
+
 # fetch the endpoint catalogue
-ROOT=https://developer.openbanking.org.uk/open-data/participant-store/$CATALOG
-$CURL -O $ROOT
+$CURL -O $BASEURL/$CATALOG
 
 # process catalogue to extract all (name,endpoint) pairs
 $JQ '.data[] as $d '`
