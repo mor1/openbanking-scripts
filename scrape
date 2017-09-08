@@ -11,15 +11,12 @@ if [ "$#" -ne 1 ]; then
 fi
 COMMITMSG=$1
 
-CURL="curl -#k" # Bank of Ireland TLS certificate is broken...
+CURL="curl -#k" # `-k` as Bank of Ireland TLS certificate is broken?
 PLATFORM=$(uname -s)
 
 BASEURL=https://developer.openbanking.org.uk/open-data/participant-store
 CATALOG=participant_store.json
 ENDPOINTS=name-endpoints.json
-
-# canonicalise directory
-pushd $(pwd -P)/data
 
 case $PLATFORM in
   Darwin )
@@ -35,6 +32,7 @@ case $PLATFORM in
 esac
 
 # fetch the endpoint catalogue
+pushd $(dirname $0)/data
 $CURL -O $BASEURL/$CATALOG
 
 # process catalogue to extract all (name,endpoint) pairs
