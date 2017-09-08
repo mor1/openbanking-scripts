@@ -11,7 +11,7 @@ if [ "$#" -ne 1 ]; then
 fi
 COMMITMSG=$1
 
-CURL="curl -#k" # `-k` as Bank of Ireland TLS certificate is broken?
+CURL="curl -sSk" # silent, with errors, insecure (Bank of Ireland TLS cert...)
 PLATFORM=$(uname -s)
 
 BASEURL=https://developer.openbanking.org.uk/open-data/participant-store
@@ -32,7 +32,7 @@ case $PLATFORM in
 esac
 
 # fetch the endpoint catalogue
-pushd $(dirname $0)/data
+pushd $(dirname $0)/data >/dev/null
 $CURL -O $BASEURL/$CATALOG
 
 # process catalogue to extract all (name,endpoint) pairs
@@ -51,13 +51,12 @@ $JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
   | tr -d '"' \
   | while read name url;
 do
-  echo "== fetch $name: $url"
   $CURL $url | $JQ '.' >| "$name-$(basename $url).json"
 done
 
 # commit any modifications to the datastore
 git add .
-git commit -am "$COMMITMSG"
+git commit -am "$COMMITMSG" >/dev/null
 
 # done
-popd
+popd >/dev/null
