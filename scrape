@@ -11,7 +11,10 @@ if [ "$#" -ne 1 ]; then
 fi
 COMMITMSG=$1
 
-CURL="curl -sSk" # silent, with errors, insecure (Bank of Ireland TLS cert...)
+# silent, with errors, insecure (Bank of Ireland TLS cert...), decompress if
+# compressed data returned
+CURL="curl -sSk --compressed"
+
 PLATFORM=$(uname -s)
 
 BASEURL=https://developer.openbanking.org.uk/open-data/participant-store
