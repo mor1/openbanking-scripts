@@ -17,7 +17,7 @@ CURL="curl -sSk --compressed"
 
 PLATFORM=$(uname -s)
 
-BASEURL=https://developer.openbanking.org.uk/open-data/participant-store
+BASEURL=https://raw.githubusercontent.com/OpenBankingUK/opendata-api-spec-compiled/master
 CATALOG=participant_store.json
 ENDPOINTS=name-endpoints.json
 
