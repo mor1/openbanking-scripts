@@ -11,19 +11,18 @@ if [ "$#" -ne 1 ]; then
 fi
 COMMITMSG=$1
 
-# silent, with errors, insecure (Bank of Ireland TLS cert...), decompress if
-# compressed data returned
-CURL="curl -sSk --compressed"
+# silent, with errors, insecure (Bank of Ireland TLS cert...)
+CURL="curl -sSk"
 
 PLATFORM=$(uname -s)
 
-BASEURL=https://raw.githubusercontent.com/OpenBankingUK/opendata-api-spec-compiled/master
-CATALOG=participant_store.json
-ENDPOINTS=name-endpoints.json
+BASEURL="https://raw.githubusercontent.com/OpenBankingUK/opendata-api-spec-compiled/master"
+CATALOG="participant_store.json"
+ENDPOINTS="name-endpoints.json"
 
 case $PLATFORM in
   Darwin )
-    JQ="docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd mor1/jq:latest"
+    JQ="docker run -i --rm -v $(pwd -P):/cwd -w /cwd mor1/jq:latest"
     ;;
   Linux )
     JQ="/home/rmm1002/openbanking-scripts/jq-linux64"
@@ -35,7 +34,7 @@ case $PLATFORM in
 esac
 
 # fetch the endpoint catalogue
-pushd $(dirname $0)/data >/dev/null
+pushd "$(dirname $0)"/data >/dev/null
 $CURL -O $BASEURL/$CATALOG
 
 # process catalogue to extract all (name,endpoint) pairs
@@ -44,9 +43,14 @@ $JQ -f ../catalogue.jq $CATALOG >| $ENDPOINTS
 # iterate over (name,endpoint) pairs to fetch data
 $JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
   | tr -d '"' \
-  | while read name url;
+  | while read -r name url;
 do
-  $CURL $url | $JQ '.' >| "$name-$(basename $url).json"
+  # if we get an error first time through, likely due to compressed data being
+  # returned. tell $CURL to request `--compressed` data so it knows to
+  # decompress before writing out. if all else fails, report error and continue
+  $CURL $url | $JQ '.' >| "$name-$(basename $url).json" \
+    || $CURL --compressed $url | $JQ '.' >| "$name-$(basename $url).json" \
+    || { echo "ERROR: $url"; true; }
 done
 
 # commit any modifications to the datastore
