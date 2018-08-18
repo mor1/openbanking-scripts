@@ -39,15 +39,7 @@ pushd $(dirname $0)/data >/dev/null
 $CURL -O $BASEURL/$CATALOG
 
 # process catalogue to extract all (name,endpoint) pairs
-$JQ '.data[] as $d '`
-    `'| { mtime: .meta.LastUpdated,'`
-        `'name: $d.name,'`
-        `'urls: ['`
-        `'  $d.baseUrl'`
-        `'  + "/" + ($d.supportedAPIs | to_entries | .[] | .value[]'`
-        `'  + "/" + .key)'`
-        `']}' \
-          $CATALOG >| $ENDPOINTS
+$JQ -f ../catalogue.jq $CATALOG >| $ENDPOINTS
 
 # iterate over (name,endpoint) pairs to fetch data
 $JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
