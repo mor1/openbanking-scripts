@@ -28,18 +28,17 @@ case $PLATFORM in
     ;;
 esac
 
+pushd "$(dirname $0)"/data >/dev/null
+
+# fetch the endpoint catalogue
+
+ENDPOINTS="name-endpoints.json"
+python3 /home/rmm1002/openbanking-scripts/endpoints.py >| $ENDPOINTS
+
 # BASEURL="https://raw.githubusercontent.com/OpenBankingUK/opendata-api-spec-compiled/master"
 # CATALOG="participant_store.json"
-ENDPOINTS="name-endpoints.json"
-
-# # fetch the endpoint catalogue
-# pushd "$(dirname $0)"/data >/dev/null
 # $CURL -O $BASEURL/$CATALOG
-
-# # process catalogue to extract all (name,endpoint) pairs
 # $JQ -f ../catalogue.jq $CATALOG >| $ENDPOINTS
-
-python3 /home/rmm1002/openbanking-scripts/endpoints.py >| $ENDPOINTS
 
 # iterate over (name,endpoint) pairs to fetch data
 $JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
