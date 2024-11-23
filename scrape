@@ -48,7 +48,7 @@ do
   # Barclays appear to have cut'n'pasted from an O365 email with
   # SafeLinks on which breaks the `basename ...` usage to get the target
   # filename
-  url=$(curl -Ls -w %{url_effective} -o /dev/null "$url")
+  url=$(curl -Ls -w "%{url_effective}" -o /dev/null "$url")
 
   # if we get an error first time through, likely due to compressed data being
   # returned. tell $CURL to request `--compressed` data so it knows to
