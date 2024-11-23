@@ -1,15 +1,22 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 #
 # Copyright (c) 2017-2024, Richard Mortier <mort@cantab.net>
 # @license LICENSE.md
 #
 # Scrape all Open Banking open API endpoints
 
+set -e
+
+BASEDIR="/home/rmm1002/openbanking-scripts"
+# BASEDIR="/home/mort/u/src/sh/openbanking-scripts"
+
 if [ "$#" -ne 1 ]; then
   echo "usage: $(basename "$0") COMMIT-MSG"
   exit 1
 fi
 COMMITMSG=$1
+
+[ -d "data" ] || mkdir data
 
 # silent, with errors, insecure (Bank of Ireland TLS cert...)
 CURL="curl -sSk"
@@ -21,6 +28,7 @@ case $PLATFORM in
     ;;
   Linux )
     JQ="/home/rmm1002/openbanking-scripts/jq-linux64"
+    [ "$SHOST" == "greyjay" ] && JQ="jq"
     ;;
   * )
     echo "ERR: unknown PLATFORM=$PLATFORM"
@@ -28,17 +36,12 @@ case $PLATFORM in
     ;;
 esac
 
-pushd "$(dirname $0)"/data >/dev/null
+pushd "$BASEDIR/data" >/dev/null
 
 # fetch the endpoint catalogue
 
 ENDPOINTS="name-endpoints.json"
-python3 /home/rmm1002/openbanking-scripts/endpoints.py >| $ENDPOINTS
-
-# BASEURL="https://raw.githubusercontent.com/OpenBankingUK/opendata-api-spec-compiled/master"
-# CATALOG="participant_store.json"
-# $CURL -O $BASEURL/$CATALOG
-# $JQ -f ../catalogue.jq $CATALOG >| $ENDPOINTS
+python3 $BASEDIR/endpoints.py >| $ENDPOINTS
 
 # iterate over (name,endpoint) pairs to fetch data
 $JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
