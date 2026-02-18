@@ -23,20 +23,20 @@ CURL="curl -sSk"
 
 PLATFORM=$(uname -s)
 case $PLATFORM in
-  Darwin )
+  Darwin)
     JQ="docker run -i --rm -v $(pwd -P):/cwd -w /cwd mor1/jq:latest"
     ;;
-  Linux )
+  Linux)
     JQ="/home/rmm1002/openbanking-scripts/jq-linux64"
     [ "$SHOST" == "greyjay" ] && JQ="jq"
     ;;
-  * )
+  *)
     echo "ERR: unknown PLATFORM=$PLATFORM"
     exit 1
     ;;
 esac
 
-pushd "$BASEDIR/data" >/dev/null
+pushd "$BASEDIR/data" > /dev/null
 
 # fetch the endpoint catalogue
 
@@ -46,24 +46,26 @@ python3 $BASEDIR/endpoints.py >| $ENDPOINTS
 # iterate over (name,endpoint) pairs to fetch data
 $JQ '(.name | gsub("[^A-Za-z0-9._-]";"";"g")) + " " + (.urls[])' $ENDPOINTS \
   | tr -d '"' \
-  | while read -r name url;
-do
-  # Barclays appear to have cut'n'pasted from an O365 email with
-  # SafeLinks on which breaks the `basename ...` usage to get the target
-  # filename
-  url=$(curl -Ls -w "%{url_effective}" -o /dev/null "$url")
+  | while read -r name url; do
+    # Barclays appear to have cut'n'pasted from an O365 email with
+    # SafeLinks on which breaks the `basename ...` usage to get the target
+    # filename
+    url=$(curl -Ls -w "%{url_effective}" -o /dev/null "$url")
 
-  # if we get an error first time through, likely due to compressed data being
-  # returned. tell $CURL to request `--compressed` data so it knows to
-  # decompress before writing out. if all else fails, report error and continue
-  $CURL $url | $JQ '.' >| "$name-$(basename $url).json" \
-    || $CURL --compressed $url | $JQ '.' >| "$name-$(basename $url).json" \
-    || { echo "ERROR: $url"; true; }
-done
+    # if we get an error first time through, likely due to compressed data being
+    # returned. tell $CURL to request `--compressed` data so it knows to
+    # decompress before writing out. if all else fails, report error and continue
+    $CURL $url | $JQ '.' >| "$name-$(basename $url).json" \
+      || $CURL --compressed $url | $JQ '.' >| "$name-$(basename $url).json" \
+      || {
+        echo "ERROR: $url"
+        true
+      }
+  done
 
 # commit any modifications to the datastore
 git add .
-git commit -am "$COMMITMSG" >/dev/null
+git commit -am "$COMMITMSG" > /dev/null
 
 # done
-popd >/dev/null
+popd > /dev/null
