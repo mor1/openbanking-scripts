@@ -25,7 +25,7 @@ URL = "https://openbanking.atlassian.net/wiki/spaces/DZ/pages/1165263140/Open+Da
 H2ID = r"Product Information & FCA Metrics"
 
 if __name__ == "__main__":
-    log.setLevel(logging.DEBUG)
+    # log.setLevel(logging.DEBUG)
 
     with requests.Session() as session:
         page = session.get(URL)
